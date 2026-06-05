@@ -1,0 +1,41 @@
+project:
+  city: Toronto
+  default_year: 2025
+  default_geography: downtown_toronto
+
+sources:
+  cmhc_rental_market:
+    description: CMHC Rental Market Survey average rents by bedroom type and geography.
+    landing_page: https://www.cmhc-schl.gc.ca/professionals/housing-markets-data-and-research/housing-data/data-tables/rental-market
+    notes: >
+      CMHC tables may be downloaded as XLSX/CSV from the official interface. Store raw files
+      under data/raw/cmhc/ and pass the path to the ETL command.
+  toronto_open_data:
+    description: City of Toronto Open Data boundary and neighbourhood metadata.
+    ckan_base_url: https://ckan0.cf.opendata.inter.prod-toronto.ca
+    package_keywords:
+      - neighbourhood
+      - boundary
+      - profile
+
+unit_type_mapping:
+  bachelor: Studio
+  studio: Studio
+  0 bedroom: Studio
+  1 bedroom: 1 Bedroom
+  one bedroom: 1 Bedroom
+  2 bedroom: 2 Bedroom
+  two bedroom: 2 Bedroom
+  3 bedroom +: 3 Bedroom+
+  3 bedroom plus: 3 Bedroom+
+  total: Total
+
+suppression_markers:
+  - a
+  - b
+  - c
+  - d
+  - "**"
+  - "--"
+  - n/a
+  - na
