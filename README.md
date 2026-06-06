@@ -8,6 +8,11 @@ Official data sources -> Python ETL -> SQL warehouse -> Power BI map dashboard
 
 The project is inspired by the land-value overlays in city-building games: choose a bedroom type, year, and geography, then see where rent pressure is highest across Toronto.
 
+## Live Demo
+
+- Interactive GitHub Pages app: https://xxstvxx.github.io/Toronto-Rent-Heatmap-Lab/
+- Repository: https://github.com/XXStvXX/Toronto-Rent-Heatmap-Lab
+
 ## Project Goals
 
 - Ingest official rental market data from CMHC Rental Market Survey tables.
@@ -56,6 +61,8 @@ The repository includes a small sample dataset so the SQL model, tests, and Powe
 
 ```text
 .
+├── app.py                  # Optional Streamlit prototype, not the main deployment
+├── site/                   # GitHub Pages static interactive app
 ├── config/                 # Data-source and pipeline configuration
 ├── data/sample/            # Small synthetic/sample files for development
 ├── docs/                   # Architecture, data dictionary, source notes
@@ -63,7 +70,7 @@ The repository includes a small sample dataset so the SQL model, tests, and Powe
 ├── sql/                    # Warehouse schema and analytical views
 ├── src/rent_heatmap/       # Python ETL package
 ├── tests/                  # Unit tests for cleaning and validation logic
-└── .github/workflows/      # CI checks
+└── .github/workflows/      # CI and Pages deployment checks
 ```
 
 ## Quick Start
@@ -122,4 +129,4 @@ This project maps aggregate rents by geography. It should not be used to infer i
 
 ## Status
 
-Foundation build: ETL package, sample data, SQL schema, Power BI modeling notes, and CI.
+Interactive GitHub Pages demo plus foundation build: ETL package, sample data, SQL schema, Power BI modeling notes, and CI.
