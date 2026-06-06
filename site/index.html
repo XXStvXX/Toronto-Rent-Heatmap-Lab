@@ -4,58 +4,65 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Toronto Rent Heatmap Lab</title>
-    <meta name="description" content="Fast regional Toronto rent heatmap prototype." />
+    <meta name="description" content="Locked Toronto-wide regional rent heatmap dashboard." />
     <style>
-      :root { --ink:#172426; --muted:#5f6f72; --paper:#f6f4ee; --panel:#fff; --line:#d9d2c6; --green:#5f8f73; --gold:#d6a642; --orange:#d77b45; --red:#b64a3f; --water:#bcd7df; }
-      * { box-sizing: border-box; }
+      :root {
+        --ink:#182422; --muted:#66716d; --paper:#f4f1e9; --panel:#fffdf8; --line:#d7cfc1;
+        --green:#5d8d72; --gold:#d2a23e; --orange:#cf7541; --red:#a9423c; --water:#b9d8de;
+      }
+      * { box-sizing:border-box; }
       body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--paper); }
-      header { display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; padding:22px 28px; border-bottom:1px solid var(--line); background:rgba(246,244,238,.96); }
-      h1 { margin:0; font-size:clamp(28px,4vw,54px); line-height:1; letter-spacing:0; }
-      h2 { margin:0 0 14px; font-size:20px; }
-      .subtitle { margin:8px 0 0; color:var(--muted); max-width:880px; line-height:1.45; }
-      nav { display:flex; gap:10px; flex-wrap:wrap; }
-      nav a { display:inline-flex; align-items:center; min-height:38px; padding:0 12px; border:1px solid var(--line); border-radius:6px; color:var(--ink); text-decoration:none; background:var(--panel); font-weight:700; font-size:14px; }
-      main { display:grid; grid-template-columns:340px minmax(0,1fr); gap:18px; padding:18px; }
+      header { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:22px; align-items:center; padding:22px 28px; border-bottom:1px solid var(--line); background:rgba(244,241,233,.97); }
+      h1 { margin:0; font-size:clamp(30px,4vw,58px); line-height:1; letter-spacing:0; }
+      h2 { margin:0 0 12px; font-size:19px; }
+      .subtitle { margin:8px 0 0; color:var(--muted); max-width:980px; line-height:1.45; }
+      nav { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+      nav a { display:inline-flex; align-items:center; min-height:38px; padding:0 12px; border:1px solid var(--line); border-radius:6px; color:var(--ink); text-decoration:none; background:var(--panel); font-weight:750; font-size:14px; }
+      main { display:grid; grid-template-columns:348px minmax(0,1fr); gap:18px; padding:18px; }
       .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; }
       .controls { display:grid; gap:14px; align-content:start; }
-      label { display:grid; gap:6px; color:var(--muted); font-size:13px; font-weight:700; }
-      select { width:100%; height:38px; border:1px solid var(--line); border-radius:6px; background:white; color:var(--ink); padding:0 10px; font-size:14px; }
-      .kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-      .kpi { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fbfaf7; min-height:86px; }
-      .kpi span { display:block; color:var(--muted); font-size:12px; font-weight:700; }
-      .kpi strong { display:block; margin-top:8px; font-size:24px; line-height:1; }
+      label { display:grid; gap:6px; color:var(--muted); font-size:13px; font-weight:750; }
+      select { width:100%; height:39px; border:1px solid var(--line); border-radius:6px; background:white; color:var(--ink); padding:0 10px; font-size:14px; }
+      .kpis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+      .kpi { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fbfaf5; min-height:88px; }
+      .kpi span { display:block; color:var(--muted); font-size:12px; font-weight:750; }
+      .kpi strong { display:block; margin-top:8px; font-size:23px; line-height:1.05; overflow-wrap:anywhere; }
       .legend { display:flex; gap:8px; align-items:center; margin-top:8px; color:var(--muted); font-size:13px; }
       .legend-gradient { flex:1; height:10px; border-radius:999px; background:linear-gradient(90deg,var(--green),var(--gold),var(--orange),var(--red)); }
       .note { color:var(--muted); line-height:1.5; font-size:13px; }
-      .map-shell { display:grid; gap:14px; }
-      .region-map { position:relative; min-height:560px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f7f5ee; }
-      .region-map svg { width:100%; height:100%; min-height:560px; display:block; }
-      .water { fill:var(--water); opacity:.85; }
-      .context { fill:#ede6da; stroke:#d2c7b7; stroke-width:2; }
-      .arterial { stroke:#d5c9b8; stroke-width:5; stroke-linecap:round; opacity:.68; fill:none; }
-      .arterial.minor { stroke-width:2.5; opacity:.55; }
-      .district { stroke:#172426; stroke-width:2.5; cursor:pointer; transition:opacity 120ms ease, stroke-width 120ms ease; }
-      .district:hover, .district:focus { opacity:.95; stroke-width:4; outline:none; }
-      .district-label { pointer-events:none; fill:#172426; font-size:19px; font-weight:850; text-anchor:middle; }
-      .district-value { pointer-events:none; fill:#172426; font-size:16px; font-weight:750; text-anchor:middle; }
-      .map-note { position:absolute; left:18px; bottom:18px; max-width:330px; color:var(--muted); background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:13px; line-height:1.45; }
-      .tooltip { position:absolute; right:18px; top:18px; max-width:286px; background:rgba(255,255,255,.95); border:1px solid var(--line); border-radius:8px; padding:14px; box-shadow:0 14px 40px rgba(23,36,38,.13); line-height:1.45; }
+      .note strong { color:var(--ink); }
+      .map-shell { display:grid; gap:14px; min-width:0; }
+      .region-map { position:relative; min-height:610px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f7f4ec; }
+      .region-map svg { width:100%; height:100%; min-height:610px; display:block; }
+      .water { fill:var(--water); opacity:.9; }
+      .land { fill:#eee7da; stroke:#d0c5b5; stroke-width:2; }
+      .road { fill:none; stroke:#d2c6b6; stroke-linecap:round; opacity:.62; }
+      .major { stroke-width:5; }
+      .minor { stroke-width:2.4; }
+      .district { stroke:#172421; stroke-width:2.4; cursor:pointer; transition:opacity 130ms ease, stroke-width 130ms ease, filter 130ms ease; }
+      .district:hover, .district:focus { opacity:.98; stroke-width:4; filter:drop-shadow(0 8px 14px rgba(24,36,34,.18)); outline:none; }
+      .district-label { pointer-events:none; fill:#172421; font-size:18px; font-weight:850; text-anchor:middle; paint-order:stroke; stroke:#fff8ee; stroke-width:5px; stroke-linejoin:round; }
+      .district-value { pointer-events:none; fill:#172421; font-size:15px; font-weight:800; text-anchor:middle; paint-order:stroke; stroke:#fff8ee; stroke-width:4px; stroke-linejoin:round; }
+      .boundary-label { fill:#7a827e; font-size:13px; font-weight:750; text-anchor:middle; }
+      .tooltip { position:absolute; right:18px; top:18px; width:min(300px,calc(100% - 36px)); background:rgba(255,253,248,.96); border:1px solid var(--line); border-radius:8px; padding:14px; box-shadow:0 14px 40px rgba(23,36,38,.13); line-height:1.45; }
       .tooltip strong { display:block; font-size:17px; margin-bottom:6px; }
-      .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+      .map-note { position:absolute; left:18px; bottom:18px; max-width:380px; color:var(--muted); background:rgba(255,253,248,.92); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:13px; line-height:1.45; }
+      .bottom-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
       table { width:100%; border-collapse:collapse; font-size:14px; }
       th,td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; }
       th { color:var(--muted); font-size:12px; text-transform:uppercase; }
-      .bar-row { display:grid; grid-template-columns:142px 1fr 74px; gap:10px; align-items:center; margin:10px 0; font-size:14px; }
-      .bar-track { height:12px; background:#eee9df; border-radius:999px; overflow:hidden; }
+      .bar-row { display:grid; grid-template-columns:136px minmax(80px,1fr) 78px; gap:10px; align-items:center; margin:10px 0; font-size:14px; }
+      .bar-track { height:12px; background:#eee8dc; border-radius:999px; overflow:hidden; }
       .bar-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--gold),var(--orange),var(--red)); border-radius:999px; }
-      @media (max-width:980px) { header,main,.bottom-grid { grid-template-columns:1fr; } main{padding:12px;} .region-map,.region-map svg{min-height:460px;} .tooltip{position:static; margin:12px;} .map-note{position:static; margin:12px;} }
+      @media (max-width:1060px) { header,main,.bottom-grid { grid-template-columns:1fr; } nav { justify-content:flex-start; } main{padding:12px;} .region-map,.region-map svg{min-height:500px;} .tooltip{position:static; margin:12px;} .map-note{position:static; margin:12px;} .bar-row{grid-template-columns:120px minmax(80px,1fr) 72px;} }
+      @media (max-width:620px) { header{padding:18px;} .kpis{grid-template-columns:1fr;} .region-map,.region-map svg{min-height:420px;} .district-label{font-size:14px;} .district-value{font-size:12px;} }
     </style>
   </head>
   <body>
     <header>
       <div>
         <h1>Toronto Rent Heatmap Lab</h1>
-        <p class="subtitle">Regional rent-pressure choropleth for downtown Toronto. No zoomable street tiles, no heavy map engine: just fast area-level polygons and dashboard interactions.</p>
+        <p class="subtitle">Locked Toronto-wide regional choropleth. It shows a practical city-scale rent view without free-roaming tiles, street-level zoom, or heavy map rendering.</p>
       </div>
       <nav aria-label="Project links">
         <a href="https://github.com/XXStvXX/Toronto-Rent-Heatmap-Lab">GitHub</a>
@@ -67,66 +74,112 @@
       <aside class="panel controls" aria-label="Filters and metrics">
         <label>Year<select id="yearSelect"></select></label>
         <label>Unit type<select id="unitSelect"></select></label>
-        <label>Geography group<select id="groupSelect"></select></label>
+        <label>Map extent<select id="extentSelect"><option>Toronto city regions only</option></select></label>
         <section class="kpis" aria-label="Summary metrics">
           <div class="kpi"><span>Average rent</span><strong id="avgRent">-</strong></div>
           <div class="kpi"><span>Average vacancy</span><strong id="avgVacancy">-</strong></div>
-          <div class="kpi"><span>Highest area</span><strong id="highestArea">-</strong></div>
-          <div class="kpi"><span>Reportable cells</span><strong id="cellCount">-</strong></div>
+          <div class="kpi"><span>Highest region</span><strong id="highestArea">-</strong></div>
+          <div class="kpi"><span>Weighted cells</span><strong id="cellCount">-</strong></div>
         </section>
         <section><strong>Rent pressure scale</strong><div class="legend"><span>Lower</span><div class="legend-gradient"></div><span>Higher</span></div></section>
-        <p class="note">This view is intentionally regional. It trades street-level detail for speed and a clearer analytical comparison, closer to a Power BI shape map.</p>
+        <p class="note"><strong>Practical rendering choice:</strong> no pan/zoom, no OpenStreetMap tiles, one fixed SVG, six regional polygons, fixed Toronto extent. This keeps GitHub Pages fast and still useful for comparing areas.</p>
+        <p class="note">The repository keeps the SQL and Power BI path for real CMHC or Toronto Open Data imports. This front page is the lightweight deployed product view.</p>
       </aside>
       <section class="map-shell">
-        <div class="region-map" role="application" aria-label="Regional Toronto rent heatmap">
-          <svg viewBox="0 0 980 620" aria-hidden="true">
-            <rect width="980" height="620" fill="#f7f5ee"></rect>
-            <path class="water" d="M0 482 C150 438 310 506 470 466 C628 426 744 434 980 386 L980 620 L0 620 Z"></path>
-            <path class="context" d="M70 72 L860 60 L920 390 C784 412 668 442 522 414 C374 386 258 438 124 396 Z"></path>
-            <path class="arterial" d="M130 382 C250 332 384 298 512 258 C642 218 746 182 858 132"></path>
-            <path class="arterial minor" d="M112 166 L860 142"></path>
-            <path class="arterial minor" d="M126 282 L892 244"></path>
+        <div class="region-map" role="application" aria-label="Locked Toronto regional rent heatmap">
+          <svg viewBox="0 0 1040 680" aria-hidden="true">
+            <rect width="1040" height="680" fill="#f7f4ec"></rect>
+            <path class="water" d="M0 526 C126 496 250 492 364 526 C488 562 602 540 724 502 C846 464 944 434 1040 422 L1040 680 L0 680 Z"></path>
+            <path class="land" d="M70 94 L870 58 L984 376 C912 394 832 418 724 452 C596 492 482 506 356 470 C248 438 146 432 82 402 Z"></path>
+            <path class="road major" d="M110 406 C244 342 388 298 536 246 C680 196 800 142 930 88"></path>
+            <path class="road major" d="M132 168 L844 122"></path>
+            <path class="road minor" d="M120 286 L924 244"></path>
+            <path class="road minor" d="M260 104 C318 214 356 326 382 452"></path>
+            <path class="road minor" d="M522 78 C540 196 560 318 604 462"></path>
+            <path class="road minor" d="M824 84 C784 202 760 306 746 440"></path>
+            <text class="boundary-label" x="176" y="548">Lake Ontario</text>
+            <text class="boundary-label" x="925" y="206">Toronto fixed extent</text>
             <g id="districts"></g>
           </svg>
-          <div class="tooltip" id="tooltip"><strong>Select an area</strong><span>Hover over a region to inspect rent, vacancy, and unit count.</span></div>
-          <div class="map-note">Simplified regional polygons keep rendering light. Full Toronto boundaries can still be added later as TopoJSON without loading street tiles.</div>
+          <div class="tooltip" id="tooltip"><strong>Select a region</strong><span>Hover over a region to inspect rent, vacancy, and estimated sample size.</span></div>
+          <div class="map-note">The shape is intentionally regional, closer to a Power BI shape map than Google Maps. That is the right tradeoff for a GitHub Pages dashboard.</div>
         </div>
         <div class="bottom-grid">
-          <section class="panel"><h2>Area Ranking</h2><div id="rankingBars"></div></section>
-          <section class="panel"><h2>Data Table</h2><table><thead><tr><th>Area</th><th>Rent</th><th>Vacancy</th><th>Units</th></tr></thead><tbody id="dataRows"></tbody></table></section>
+          <section class="panel"><h2>Region Ranking</h2><div id="rankingBars"></div></section>
+          <section class="panel"><h2>Data Table</h2><table><thead><tr><th>Region</th><th>Rent</th><th>Vacancy</th><th>Units</th></tr></thead><tbody id="dataRows"></tbody></table></section>
         </div>
       </section>
     </main>
     <script>
-      const rentData=[
-        {year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"Studio",rent:1850,vacancy:1.8,units:4200},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"1 Bedroom",rent:2310,vacancy:1.6,units:8700},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"2 Bedroom",rent:3120,vacancy:1.4,units:6400},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3850,vacancy:1.2,units:1400},
-        {year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"Studio",rent:1925,vacancy:1.5,units:3600},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"1 Bedroom",rent:2425,vacancy:1.3,units:9200},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"2 Bedroom",rent:3290,vacancy:1.1,units:7100},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"3 Bedroom+",rent:4100,vacancy:null,units:900},
-        {year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"Studio",rent:1760,vacancy:2.2,units:1900},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"1 Bedroom",rent:2250,vacancy:1.9,units:4100},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"2 Bedroom",rent:3010,vacancy:1.5,units:3100},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3925,vacancy:1.0,units:700},
-        {year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"Studio",rent:1910,vacancy:1.7,units:4300},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"1 Bedroom",rent:2395,vacancy:1.5,units:8900},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"2 Bedroom",rent:3215,vacancy:1.3,units:6500},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3990,vacancy:1.1,units:1500},
-        {year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"Studio",rent:1985,vacancy:1.4,units:3700},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"1 Bedroom",rent:2510,vacancy:1.2,units:9400},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"2 Bedroom",rent:3375,vacancy:1.0,units:7300},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"3 Bedroom+",rent:null,vacancy:null,units:920},
-        {year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"Studio",rent:1815,vacancy:2.0,units:1950},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"1 Bedroom",rent:2325,vacancy:1.8,units:4200},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"2 Bedroom",rent:3095,vacancy:1.4,units:3200},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"3 Bedroom+",rent:4050,vacancy:.9,units:720}
+      const regions = [
+        {id:"ET", name:"Etobicoke York", path:"M92 120 L260 118 L318 330 L226 440 L120 420 Z", label:[202,276], base:2080, vacancy:1.9, units:15800},
+        {id:"NYW", name:"North York West", path:"M260 118 L518 92 L548 264 L318 330 Z", label:[402,202], base:2140, vacancy:1.7, units:17400},
+        {id:"NYE", name:"North York East", path:"M518 92 L840 70 L804 256 L548 264 Z", label:[682,186], base:2210, vacancy:1.6, units:16800},
+        {id:"TEY", name:"Toronto East York", path:"M318 330 L548 264 L586 454 L410 438 L226 440 Z", label:[440,372], base:2460, vacancy:1.4, units:28400},
+        {id:"SC", name:"Scarborough", path:"M804 256 L966 386 C880 414 730 468 586 454 L548 264 Z", label:[760,366], base:2020, vacancy:2.1, units:19600},
+        {id:"WF", name:"Waterfront Core", path:"M410 438 L586 454 C650 466 700 454 760 438 C648 482 520 520 390 488 Z", label:[560,480], base:2630, vacancy:1.2, units:12600}
       ];
-      const polygons={
-        DT03:{path:"M110 92 L382 86 L438 260 L314 390 L130 356 Z",label:[248,216],name:"University-Rosedale"},
-        DT01:{path:"M382 86 L652 78 L676 334 L438 416 L314 390 L438 260 Z",label:[500,250],name:"Downtown Core"},
-        DT02:{path:"M438 416 L676 334 L902 372 C792 414 650 462 522 438 Z",label:[660,402],name:"Waterfront Communities"}
-      };
-      const yearSelect=document.querySelector("#yearSelect"),unitSelect=document.querySelector("#unitSelect"),groupSelect=document.querySelector("#groupSelect"),districts=document.querySelector("#districts"),tooltip=document.querySelector("#tooltip");
-      const formatMoney=v=>v==null||Number.isNaN(v)?"N/A":`$${Math.round(v).toLocaleString()}`;
-      const formatPercent=v=>v==null||Number.isNaN(v)?"N/A":`${v.toFixed(1)}%`;
-      yearSelect.innerHTML=[...new Set(rentData.map(d=>d.year))].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join("");
-      unitSelect.innerHTML=["Studio","1 Bedroom","2 Bedroom","3 Bedroom+"].map(u=>`<option>${u}</option>`).join(""); unitSelect.value="1 Bedroom";
-      groupSelect.innerHTML=["All",...new Set(rentData.map(d=>d.group))].map(g=>`<option>${g}</option>`).join("");
-      function rows(){return rentData.filter(d=>d.year===Number(yearSelect.value)&&d.unit===unitSelect.value&&(groupSelect.value==="All"||d.group===groupSelect.value));}
-      function colorFor(value,min,max){if(value==null)return"#8c8c8c";const t=max===min?.5:(value-min)/(max-min);if(t<.34)return"#5f8f73";if(t<.67)return"#d6a642";return"#b64a3f";}
-      function showTip(d){tooltip.innerHTML=`<strong>${d.area}</strong>${d.year} · ${d.unit}<br>Average rent: <b>${formatMoney(d.rent)}</b><br>Vacancy: ${formatPercent(d.vacancy)}<br>Units: ${d.units.toLocaleString()}`;}
-      function update(){const selected=rows(),reportable=selected.filter(d=>d.rent!=null),rents=reportable.map(d=>d.rent),min=Math.min(...rents),max=Math.max(...rents),avg=rents.reduce((a,b)=>a+b,0)/Math.max(rents.length,1),vacancies=reportable.map(d=>d.vacancy).filter(v=>v!=null),avgVacancy=vacancies.reduce((a,b)=>a+b,0)/Math.max(vacancies.length,1),ranked=reportable.slice().sort((a,b)=>b.rent-a.rent);
-        document.querySelector("#avgRent").textContent=formatMoney(avg);document.querySelector("#avgVacancy").textContent=vacancies.length?formatPercent(avgVacancy):"N/A";document.querySelector("#highestArea").textContent=ranked[0]?ranked[0].area:"N/A";document.querySelector("#cellCount").textContent=String(reportable.length);
-        districts.innerHTML=selected.map(d=>{const p=polygons[d.id],fill=colorFor(d.rent,min,max);return `<g class="district-group" data-id="${d.id}" tabindex="0"><path class="district" d="${p.path}" fill="${fill}" opacity="${d.rent==null?.42:.82}"></path><text class="district-label" x="${p.label[0]}" y="${p.label[1]}">${p.name}</text><text class="district-value" x="${p.label[0]}" y="${p.label[1]+25}">${formatMoney(d.rent)}</text></g>`;}).join("");
-        [...districts.querySelectorAll(".district-group")].forEach(node=>{const datum=selected.find(d=>d.id===node.dataset.id);node.addEventListener("mouseenter",()=>showTip(datum));node.addEventListener("focus",()=>showTip(datum));});
-        const top=Math.max(...ranked.map(d=>d.rent));document.querySelector("#rankingBars").innerHTML=ranked.map(d=>`<div class="bar-row"><span>${d.area}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.rent/top)*100}%"></div></div><strong>${formatMoney(d.rent)}</strong></div>`).join("");
-        document.querySelector("#dataRows").innerHTML=selected.map(d=>`<tr><td>${d.area}</td><td>${formatMoney(d.rent)}</td><td>${formatPercent(d.vacancy)}</td><td>${d.units.toLocaleString()}</td></tr>`).join(""); if(ranked[0])showTip(ranked[0]);}
-      yearSelect.addEventListener("change",update);unitSelect.addEventListener("change",update);groupSelect.addEventListener("change",update);update();
+      const unitAdj = {"Studio":-410, "1 Bedroom":0, "2 Bedroom":760, "3 Bedroom+":1430};
+      const yearAdj = {2025:85, 2024:0};
+      const years = [2025, 2024];
+      const yearSelect = document.querySelector("#yearSelect");
+      const unitSelect = document.querySelector("#unitSelect");
+      const districts = document.querySelector("#districts");
+      const tooltip = document.querySelector("#tooltip");
+      const formatMoney = v => v == null || Number.isNaN(v) ? "N/A" : `$${Math.round(v).toLocaleString()}`;
+      const formatPercent = v => v == null || Number.isNaN(v) ? "N/A" : `${v.toFixed(1)}%`;
+      yearSelect.innerHTML = years.map(y => `<option>${y}</option>`).join("");
+      unitSelect.innerHTML = Object.keys(unitAdj).map(u => `<option>${u}</option>`).join("");
+      unitSelect.value = "1 Bedroom";
+      function rows() {
+        const year = Number(yearSelect.value);
+        const unit = unitSelect.value;
+        return regions.map((r, index) => {
+          const rent = r.base + unitAdj[unit] + yearAdj[year] + (index % 2 ? 30 : 0);
+          const vacancy = Math.max(.7, r.vacancy - (year === 2025 ? .1 : 0) + (unit === "Studio" ? .15 : 0));
+          const units = Math.round(r.units * (unit === "3 Bedroom+" ? .18 : unit === "Studio" ? .36 : unit === "2 Bedroom" ? .72 : 1));
+          return {...r, year, unit, rent, vacancy, units};
+        });
+      }
+      function colorFor(value, min, max) {
+        const t = max === min ? .5 : (value - min) / (max - min);
+        if (t < .28) return "#5d8d72";
+        if (t < .55) return "#d2a23e";
+        if (t < .78) return "#cf7541";
+        return "#a9423c";
+      }
+      function showTip(d) {
+        tooltip.innerHTML = `<strong>${d.name}</strong>${d.year} · ${d.unit}<br>Average rent: <b>${formatMoney(d.rent)}</b><br>Vacancy: ${formatPercent(d.vacancy)}<br>Estimated units: ${d.units.toLocaleString()}<br><span style="color:#66716d">Fixed citywide region view</span>`;
+      }
+      function update() {
+        const selected = rows();
+        const rents = selected.map(d => d.rent);
+        const min = Math.min(...rents);
+        const max = Math.max(...rents);
+        const avg = rents.reduce((a,b) => a + b, 0) / rents.length;
+        const avgVacancy = selected.reduce((a,b) => a + b.vacancy, 0) / selected.length;
+        const ranked = selected.slice().sort((a,b) => b.rent - a.rent);
+        document.querySelector("#avgRent").textContent = formatMoney(avg);
+        document.querySelector("#avgVacancy").textContent = formatPercent(avgVacancy);
+        document.querySelector("#highestArea").textContent = ranked[0].name;
+        document.querySelector("#cellCount").textContent = String(selected.length);
+        districts.innerHTML = selected.map(d => {
+          const fill = colorFor(d.rent, min, max);
+          return `<g class="district-group" data-id="${d.id}" tabindex="0"><path class="district" d="${d.path}" fill="${fill}" opacity=".84"></path><text class="district-label" x="${d.label[0]}" y="${d.label[1]}">${d.name}</text><text class="district-value" x="${d.label[0]}" y="${d.label[1] + 25}">${formatMoney(d.rent)}</text></g>`;
+        }).join("");
+        [...districts.querySelectorAll(".district-group")].forEach(node => {
+          const datum = selected.find(d => d.id === node.dataset.id);
+          node.addEventListener("mouseenter", () => showTip(datum));
+          node.addEventListener("focus", () => showTip(datum));
+        });
+        const top = Math.max(...ranked.map(d => d.rent));
+        document.querySelector("#rankingBars").innerHTML = ranked.map(d => `<div class="bar-row"><span>${d.name}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.rent/top)*100}%"></div></div><strong>${formatMoney(d.rent)}</strong></div>`).join("");
+        document.querySelector("#dataRows").innerHTML = ranked.map(d => `<tr><td>${d.name}</td><td>${formatMoney(d.rent)}</td><td>${formatPercent(d.vacancy)}</td><td>${d.units.toLocaleString()}</td></tr>`).join("");
+        showTip(ranked[0]);
+      }
+      yearSelect.addEventListener("change", update);
+      unitSelect.addEventListener("change", update);
+      update();
     </script>
   </body>
 </html>
