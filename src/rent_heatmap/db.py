@@ -55,6 +55,8 @@ UNIT_SORT_ORDER = {
     "Total": 5,
 }
 
+GEOGRAPHY_COLUMNS = ["geography_id", "geography_name", "geography_group", "latitude", "longitude"]
+
 
 def connect(database: str | Path) -> sqlite3.Connection:
     db_path = Path(database)
@@ -68,12 +70,23 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
     connection.commit()
 
 
+def _geography_frame(rent_frame: pd.DataFrame) -> pd.DataFrame:
+    geographies = rent_frame[["geography_id", "geography_name"]].drop_duplicates().copy()
+    for column in GEOGRAPHY_COLUMNS:
+        if column not in geographies.columns:
+            geographies[column] = None
+
+    for column in ["geography_group", "latitude", "longitude"]:
+        if column in rent_frame.columns:
+            metadata = rent_frame[["geography_id", column]].dropna().drop_duplicates("geography_id")
+            geographies = geographies.drop(columns=[column]).merge(metadata, on="geography_id", how="left")
+
+    return geographies[GEOGRAPHY_COLUMNS]
+
+
 def load_rent_observations(connection: sqlite3.Connection, rent_frame: pd.DataFrame) -> None:
     initialize_schema(connection)
-    geographies = rent_frame[["geography_id", "geography_name"]].drop_duplicates().copy()
-    geographies["geography_group"] = None
-    geographies["latitude"] = None
-    geographies["longitude"] = None
+    geographies = _geography_frame(rent_frame)
     geographies.to_sql("_tmp_geography", connection, if_exists="replace", index=False)
     connection.execute(
         """
