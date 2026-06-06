@@ -7,7 +7,7 @@ from .db import connect, export_tables, load_rent_observations
 from .io import read_table, write_powerbi_tables
 from .settings import load_settings
 from .sources import discover_toronto_boundary_resources
-from .transform import clean_rent_observations
+from .transform import clean_rent_observations, reshape_cmhc_wide_rent_table
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,10 +18,14 @@ def build_parser() -> argparse.ArgumentParser:
     load_sample.add_argument("--database", default="data/rent_heatmap.sqlite")
 
     load_cmhc = subparsers.add_parser("load-cmhc", help="Load a CMHC CSV/XLSX file into SQLite.")
-    load_cmhc.add_argument("path", help="Path to a CMHC-derived normalized CSV/XLSX file.")
+    load_cmhc.add_argument("path", help="Path to a CMHC-derived CSV/XLSX file.")
     load_cmhc.add_argument("--database", default="data/rent_heatmap.sqlite")
     load_cmhc.add_argument("--sheet-name", default=0)
     load_cmhc.add_argument("--config", default="config/sources.yml")
+    load_cmhc.add_argument("--wide", action="store_true", help="Input has bedroom types as columns.")
+    load_cmhc.add_argument("--year", type=int, help="Reference year for a wide CMHC table.")
+    load_cmhc.add_argument("--geography-id-column", default="geography_id")
+    load_cmhc.add_argument("--geography-name-column", default="geography_name")
 
     export = subparsers.add_parser("export-powerbi", help="Export Power BI-ready CSV tables.")
     export.add_argument("--database", default="data/rent_heatmap.sqlite")
@@ -33,9 +37,33 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _load_frame_to_database(frame_path: Path, database: str, config: str, sheet_name: str | int = 0) -> None:
+def _sheet_name(value: str | int) -> str | int:
+    if isinstance(value, int):
+        return value
+    return int(value) if str(value).isdigit() else value
+
+
+def _load_frame_to_database(
+    frame_path: Path,
+    database: str,
+    config: str,
+    sheet_name: str | int = 0,
+    wide: bool = False,
+    year: int | None = None,
+    geography_id_column: str = "geography_id",
+    geography_name_column: str = "geography_name",
+) -> None:
     settings = load_settings(config)
-    frame = read_table(frame_path, sheet_name=sheet_name)
+    frame = read_table(frame_path, sheet_name=_sheet_name(sheet_name))
+    if wide:
+        if year is None:
+            raise ValueError("--year is required when --wide is used.")
+        frame = reshape_cmhc_wide_rent_table(
+            frame,
+            reference_year=year,
+            geography_id_column=geography_id_column,
+            geography_name_column=geography_name_column,
+        )
     cleaned = clean_rent_observations(
         frame,
         unit_mapping=settings.unit_type_mapping,
@@ -55,7 +83,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.command == "load-cmhc":
-        _load_frame_to_database(Path(args.path), args.database, args.config, args.sheet_name)
+        _load_frame_to_database(
+            Path(args.path),
+            args.database,
+            args.config,
+            args.sheet_name,
+            wide=args.wide,
+            year=args.year,
+            geography_id_column=args.geography_id_column,
+            geography_name_column=args.geography_name_column,
+        )
         print(f"Loaded CMHC rent observations into {args.database}")
         return 0
 
