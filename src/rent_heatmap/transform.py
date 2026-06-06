@@ -36,6 +36,8 @@ RENT_REQUIRED_COLUMNS = {
     "average_rent",
 }
 
+OPTIONAL_GEOGRAPHY_COLUMNS = ["geography_group", "latitude", "longitude"]
+
 WIDE_UNIT_COLUMNS = {
     "studio": "Studio",
     "bachelor": "Studio",
@@ -108,8 +110,10 @@ def reshape_cmhc_wide_rent_table(
     if not value_columns:
         raise ValueError("No bedroom rent columns were found in the wide CMHC table.")
 
+    id_vars = [geography_id_column, geography_name_column]
+    id_vars.extend(column for column in OPTIONAL_GEOGRAPHY_COLUMNS if column in frame.columns)
     long = frame.melt(
-        id_vars=[geography_id_column, geography_name_column],
+        id_vars=id_vars,
         value_vars=value_columns,
         var_name="unit_type",
         value_name="average_rent",
@@ -121,7 +125,7 @@ def reshape_cmhc_wide_rent_table(
             geography_id_column: "geography_id",
             geography_name_column: "geography_name",
         }
-    )[["reference_year", "geography_id", "geography_name", "unit_type", "average_rent"]]
+    )
 
 
 def clean_rent_observations(
@@ -152,6 +156,10 @@ def clean_rent_observations(
     else:
         cleaned["unit_count"] = pd.NA
 
+    for column in ["latitude", "longitude"]:
+        if column in cleaned.columns:
+            cleaned[column] = pd.to_numeric(cleaned[column], errors="coerce")
+
     cleaned["is_suppressed"] = cleaned["average_rent"].isna()
     cleaned["unit_sort_order"] = cleaned["unit_type"].map(lambda value: UNIT_SORT_ORDER.get(value, 99))
     cleaned = cleaned.dropna(subset=["reference_year", "geography_id", "unit_type"])
@@ -166,6 +174,7 @@ def clean_rent_observations(
         "unit_count",
         "is_suppressed",
     ]
+    output_columns.extend(column for column in OPTIONAL_GEOGRAPHY_COLUMNS if column in cleaned.columns)
     return cleaned.sort_values(
         ["reference_year", "geography_name", "unit_sort_order"]
     )[output_columns].reset_index(drop=True)
