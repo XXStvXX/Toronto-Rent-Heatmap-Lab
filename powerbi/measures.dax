@@ -1,0 +1,53 @@
+Average Rent =
+AVERAGE ( fact_rent_observation[average_rent] )
+
+Median Rent =
+MEDIAN ( fact_rent_observation[average_rent] )
+
+Rent Observations =
+COUNTROWS ( fact_rent_observation )
+
+Suppressed Cells =
+CALCULATE (
+    COUNTROWS ( fact_rent_observation ),
+    fact_rent_observation[is_suppressed] = TRUE ()
+)
+
+Suppression Rate =
+DIVIDE ( [Suppressed Cells], [Rent Observations] )
+
+Average Vacancy Rate =
+AVERAGE ( fact_rent_observation[vacancy_rate] )
+
+Total Rental Units =
+SUM ( fact_rent_observation[unit_count] )
+
+Prior Year Average Rent =
+CALCULATE (
+    [Average Rent],
+    DATEADD ( dim_year[Date], -1, YEAR )
+)
+
+YoY Rent Change $ =
+[Average Rent] - [Prior Year Average Rent]
+
+YoY Rent Change % =
+DIVIDE ( [YoY Rent Change $], [Prior Year Average Rent] )
+
+High Rent Rank =
+RANKX (
+    ALLSELECTED ( dim_geography[geography_name] ),
+    [Average Rent],
+    ,
+    DESC,
+    Dense
+)
+
+Low Rent Rank =
+RANKX (
+    ALLSELECTED ( dim_geography[geography_name] ),
+    [Average Rent],
+    ,
+    ASC,
+    Dense
+)
