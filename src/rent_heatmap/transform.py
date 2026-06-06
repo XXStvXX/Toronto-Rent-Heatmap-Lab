@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 import pandas as pd
 
@@ -19,6 +19,14 @@ DEFAULT_UNIT_MAPPING = {
 }
 
 DEFAULT_SUPPRESSION_MARKERS = {"a", "b", "c", "d", "**", "--", "n/a", "na", ""}
+
+UNIT_SORT_ORDER = {
+    "Studio": 1,
+    "1 Bedroom": 2,
+    "2 Bedroom": 3,
+    "3 Bedroom+": 4,
+    "Total": 5,
+}
 
 RENT_REQUIRED_COLUMNS = {
     "reference_year",
@@ -86,6 +94,7 @@ def clean_rent_observations(
         cleaned["unit_count"] = pd.NA
 
     cleaned["is_suppressed"] = cleaned["average_rent"].isna()
+    cleaned["unit_sort_order"] = cleaned["unit_type"].map(lambda value: UNIT_SORT_ORDER.get(value, 99))
     cleaned = cleaned.dropna(subset=["reference_year", "geography_id", "unit_type"])
 
     output_columns = [
@@ -98,9 +107,9 @@ def clean_rent_observations(
         "unit_count",
         "is_suppressed",
     ]
-    return cleaned[output_columns].sort_values(
-        ["reference_year", "geography_name", "unit_type"]
-    ).reset_index(drop=True)
+    return cleaned.sort_values(
+        ["reference_year", "geography_name", "unit_sort_order"]
+    )[output_columns].reset_index(drop=True)
 
 
 def validate_rent_observations(frame: pd.DataFrame) -> list[ValidationIssue]:
