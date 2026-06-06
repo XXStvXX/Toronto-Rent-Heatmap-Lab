@@ -36,6 +36,19 @@ RENT_REQUIRED_COLUMNS = {
     "average_rent",
 }
 
+WIDE_UNIT_COLUMNS = {
+    "studio": "Studio",
+    "bachelor": "Studio",
+    "1 bedroom": "1 Bedroom",
+    "one bedroom": "1 Bedroom",
+    "2 bedroom": "2 Bedroom",
+    "two bedroom": "2 Bedroom",
+    "3 bedroom +": "3 Bedroom+",
+    "3 bedroom+": "3 Bedroom+",
+    "3 bedroom plus": "3 Bedroom+",
+    "total": "Total",
+}
+
 
 @dataclass(frozen=True)
 class ValidationIssue:
@@ -43,12 +56,15 @@ class ValidationIssue:
     message: str
 
 
+def _compact(value: object) -> str:
+    return " ".join(str(value).strip().lower().replace("+", " plus").split())
+
+
 def normalize_unit_type(value: object, mapping: dict[str, str] | None = None) -> str:
     lookup = mapping or DEFAULT_UNIT_MAPPING
     text = str(value).strip()
-    key = " ".join(text.lower().replace("+", " plus").split())
-    compact_lookup = {" ".join(k.lower().replace("+", " plus").split()): v for k, v in lookup.items()}
-    return compact_lookup.get(key, text)
+    compact_lookup = {_compact(k): v for k, v in lookup.items()}
+    return compact_lookup.get(_compact(text), text)
 
 
 def parse_money(value: object, suppression_markers: Iterable[str] | None = None) -> float | None:
@@ -63,6 +79,49 @@ def parse_money(value: object, suppression_markers: Iterable[str] | None = None)
         return float(cleaned)
     except ValueError:
         return None
+
+
+def reshape_cmhc_wide_rent_table(
+    frame: pd.DataFrame,
+    reference_year: int,
+    geography_id_column: str = "geography_id",
+    geography_name_column: str = "geography_name",
+) -> pd.DataFrame:
+    """Convert a CMHC-style bedroom wide table into normalized rent observations.
+
+    Expected wide columns include geography columns plus bedroom columns such as
+    `Studio`, `1 Bedroom`, `2 Bedroom`, `3 Bedroom +`, and `Total`.
+    """
+
+    if geography_id_column not in frame.columns or geography_name_column not in frame.columns:
+        raise ValueError("Wide CMHC tables need geography id and geography name columns.")
+
+    normalized_columns = {_compact(column): column for column in frame.columns}
+    value_columns: list[str] = []
+    renamed_unit_types: dict[str, str] = {}
+    for compact_name, unit_type in WIDE_UNIT_COLUMNS.items():
+        source_column = normalized_columns.get(_compact(compact_name))
+        if source_column:
+            value_columns.append(source_column)
+            renamed_unit_types[source_column] = unit_type
+
+    if not value_columns:
+        raise ValueError("No bedroom rent columns were found in the wide CMHC table.")
+
+    long = frame.melt(
+        id_vars=[geography_id_column, geography_name_column],
+        value_vars=value_columns,
+        var_name="unit_type",
+        value_name="average_rent",
+    )
+    long["unit_type"] = long["unit_type"].map(renamed_unit_types)
+    long["reference_year"] = reference_year
+    return long.rename(
+        columns={
+            geography_id_column: "geography_id",
+            geography_name_column: "geography_name",
+        }
+    )[["reference_year", "geography_id", "geography_name", "unit_type", "average_rent"]]
 
 
 def clean_rent_observations(
