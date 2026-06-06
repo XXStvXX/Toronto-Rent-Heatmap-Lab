@@ -13,6 +13,8 @@ The project is inspired by the land-value overlays in city-building games: choos
 - Interactive GitHub Pages app: https://xxstvxx.github.io/Toronto-Rent-Heatmap-Lab/
 - Repository: https://github.com/XXStvXX/Toronto-Rent-Heatmap-Lab
 
+The live demo uses a locked regional choropleth instead of a zoomable street map. This keeps the page fast, avoids repeated map-tile requests, and focuses the viewer on area-level rent comparison.
+
 ## Project Goals
 
 - Ingest official rental market data from CMHC Rental Market Survey tables.
