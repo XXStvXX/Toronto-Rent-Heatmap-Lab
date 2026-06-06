@@ -1,6 +1,11 @@
 import pandas as pd
 
-from rent_heatmap.transform import clean_rent_observations, normalize_unit_type, parse_money
+from rent_heatmap.transform import (
+    clean_rent_observations,
+    normalize_unit_type,
+    parse_money,
+    reshape_cmhc_wide_rent_table,
+)
 
 
 def test_normalize_unit_type_aliases():
@@ -33,3 +38,32 @@ def test_clean_rent_observations_flags_suppressed_values():
     assert cleaned.loc[0, "unit_type"] == "Studio"
     assert bool(cleaned.loc[0, "is_suppressed"])
     assert cleaned.loc[1, "average_rent"] == 2500.0
+
+
+def test_reshape_cmhc_wide_rent_table():
+    wide = pd.DataFrame(
+        {
+            "zone_id": ["DT01"],
+            "zone_name": ["Downtown Core"],
+            "Studio": ["1800"],
+            "1 Bedroom": ["2400"],
+            "2 Bedroom": ["3200"],
+        }
+    )
+
+    long = reshape_cmhc_wide_rent_table(
+        wide,
+        reference_year=2025,
+        geography_id_column="zone_id",
+        geography_name_column="zone_name",
+    )
+
+    assert len(long) == 3
+    assert set(long["unit_type"]) == {"Studio", "1 Bedroom", "2 Bedroom"}
+    assert set(long.columns) == {
+        "reference_year",
+        "geography_id",
+        "geography_name",
+        "unit_type",
+        "average_rent",
+    }
