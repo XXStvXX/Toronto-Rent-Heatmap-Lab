@@ -58,7 +58,7 @@ The repository includes a small sample dataset so the SQL model, tests, and Powe
 .
 ├── config/                 # Data-source and pipeline configuration
 ├── data/sample/            # Small synthetic/sample files for development
-├── docs/                   # Architecture, data dictionary, dashboard notes
+├── docs/                   # Architecture, data dictionary, source notes
 ├── powerbi/                # Power BI model guide and DAX measures
 ├── sql/                    # Warehouse schema and analytical views
 ├── src/rent_heatmap/       # Python ETL package
@@ -78,6 +78,27 @@ rent-heatmap export-powerbi --database data/rent_heatmap.sqlite --output exports
 ```
 
 On macOS/Linux, activate the environment with `source .venv/bin/activate`.
+
+## Importing CMHC Tables
+
+Normalized long table:
+
+```bash
+rent-heatmap load-cmhc data/raw/cmhc/toronto_rents_long.csv --database data/rent_heatmap.sqlite
+```
+
+CMHC-style wide bedroom table:
+
+```bash
+rent-heatmap load-cmhc data/raw/cmhc/toronto_rents_wide.xlsx \
+  --wide \
+  --year 2025 \
+  --geography-id-column zone_id \
+  --geography-name-column zone_name \
+  --database data/rent_heatmap.sqlite
+```
+
+See [`docs/CMHC_IMPORT_GUIDE.md`](docs/CMHC_IMPORT_GUIDE.md) for the expected input formats.
 
 ## SQL Workflow
 
