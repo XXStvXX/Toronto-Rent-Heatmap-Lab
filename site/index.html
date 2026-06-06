@@ -4,99 +4,58 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Toronto Rent Heatmap Lab</title>
-    <meta name="description" content="Lightweight interactive Toronto rent heatmap prototype." />
+    <meta name="description" content="Fast regional Toronto rent heatmap prototype." />
     <style>
-      :root {
-        --ink: #172426;
-        --muted: #5f6f72;
-        --paper: #f6f4ee;
-        --panel: #ffffff;
-        --line: #d9d2c6;
-        --green: #5f8f73;
-        --gold: #d6a642;
-        --orange: #d77b45;
-        --red: #b64a3f;
-        --water: #bcd7df;
-      }
+      :root { --ink:#172426; --muted:#5f6f72; --paper:#f6f4ee; --panel:#fff; --line:#d9d2c6; --green:#5f8f73; --gold:#d6a642; --orange:#d77b45; --red:#b64a3f; --water:#bcd7df; }
       * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: var(--ink);
-        background: var(--paper);
-      }
-      header {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 20px;
-        align-items: center;
-        padding: 22px 28px;
-        border-bottom: 1px solid var(--line);
-        background: rgba(246, 244, 238, 0.96);
-      }
-      h1 { margin: 0; font-size: clamp(28px, 4vw, 54px); line-height: 1; letter-spacing: 0; }
-      h2 { margin: 0 0 14px; font-size: 20px; }
-      .subtitle { margin: 8px 0 0; color: var(--muted); max-width: 860px; line-height: 1.45; }
-      nav { display: flex; gap: 10px; flex-wrap: wrap; }
-      nav a {
-        display: inline-flex; align-items: center; min-height: 38px; padding: 0 12px;
-        border: 1px solid var(--line); border-radius: 6px; color: var(--ink);
-        text-decoration: none; background: var(--panel); font-weight: 700; font-size: 14px;
-      }
-      main { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; padding: 18px; }
-      .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
-      .controls { display: grid; gap: 14px; align-content: start; }
-      label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; font-weight: 700; }
-      select {
-        width: 100%; height: 38px; border: 1px solid var(--line); border-radius: 6px;
-        background: white; color: var(--ink); padding: 0 10px; font-size: 14px;
-      }
-      .kpis { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      .kpi { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfaf7; min-height: 86px; }
-      .kpi span { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
-      .kpi strong { display: block; margin-top: 8px; font-size: 24px; line-height: 1; }
-      .legend { display: flex; gap: 8px; align-items: center; margin-top: 8px; color: var(--muted); font-size: 13px; }
-      .legend-gradient { flex: 1; height: 10px; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--gold), var(--orange), var(--red)); }
-      .note { color: var(--muted); line-height: 1.5; font-size: 13px; }
-      .map-shell { display: grid; gap: 14px; }
-      .schematic-wrap {
-        position: relative; min-height: 540px; border: 1px solid var(--line); border-radius: 8px;
-        overflow: hidden; background: #f7f5ee;
-      }
-      .schematic-wrap svg { width: 100%; height: 100%; min-height: 540px; display: block; }
-      .water { fill: var(--water); opacity: 0.82; }
-      .land { fill: #ede6da; stroke: #cfc5b5; stroke-width: 2; }
-      .road { stroke: #d4c8b6; stroke-width: 4; stroke-linecap: round; opacity: 0.9; }
-      .road.minor { stroke-width: 2; opacity: 0.7; }
-      .label { fill: #536466; font-size: 14px; font-weight: 700; }
-      .area-node { cursor: pointer; filter: drop-shadow(0 7px 12px rgba(23, 36, 38, 0.16)); }
-      .area-node circle { stroke: var(--ink); stroke-width: 2; transition: r 140ms ease, opacity 140ms ease; }
-      .area-node:hover circle { r: 56; opacity: 0.95; }
-      .tooltip {
-        position: absolute; right: 18px; top: 18px; max-width: 280px;
-        background: rgba(255, 255, 255, 0.94); border: 1px solid var(--line); border-radius: 8px;
-        padding: 14px; box-shadow: 0 14px 40px rgba(23, 36, 38, 0.13); line-height: 1.45;
-      }
-      .tooltip strong { display: block; font-size: 17px; margin-bottom: 6px; }
-      .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-      table { width: 100%; border-collapse: collapse; font-size: 14px; }
-      th, td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }
-      th { color: var(--muted); font-size: 12px; text-transform: uppercase; }
-      .bar-row { display: grid; grid-template-columns: 142px 1fr 74px; gap: 10px; align-items: center; margin: 10px 0; font-size: 14px; }
-      .bar-track { height: 12px; background: #eee9df; border-radius: 999px; overflow: hidden; }
-      .bar-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--gold), var(--orange), var(--red)); border-radius: 999px; }
-      @media (max-width: 980px) {
-        header, main, .bottom-grid { grid-template-columns: 1fr; }
-        main { padding: 12px; }
-        .schematic-wrap, .schematic-wrap svg { min-height: 430px; }
-      }
+      body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; color:var(--ink); background:var(--paper); }
+      header { display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; padding:22px 28px; border-bottom:1px solid var(--line); background:rgba(246,244,238,.96); }
+      h1 { margin:0; font-size:clamp(28px,4vw,54px); line-height:1; letter-spacing:0; }
+      h2 { margin:0 0 14px; font-size:20px; }
+      .subtitle { margin:8px 0 0; color:var(--muted); max-width:880px; line-height:1.45; }
+      nav { display:flex; gap:10px; flex-wrap:wrap; }
+      nav a { display:inline-flex; align-items:center; min-height:38px; padding:0 12px; border:1px solid var(--line); border-radius:6px; color:var(--ink); text-decoration:none; background:var(--panel); font-weight:700; font-size:14px; }
+      main { display:grid; grid-template-columns:340px minmax(0,1fr); gap:18px; padding:18px; }
+      .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; }
+      .controls { display:grid; gap:14px; align-content:start; }
+      label { display:grid; gap:6px; color:var(--muted); font-size:13px; font-weight:700; }
+      select { width:100%; height:38px; border:1px solid var(--line); border-radius:6px; background:white; color:var(--ink); padding:0 10px; font-size:14px; }
+      .kpis { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+      .kpi { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fbfaf7; min-height:86px; }
+      .kpi span { display:block; color:var(--muted); font-size:12px; font-weight:700; }
+      .kpi strong { display:block; margin-top:8px; font-size:24px; line-height:1; }
+      .legend { display:flex; gap:8px; align-items:center; margin-top:8px; color:var(--muted); font-size:13px; }
+      .legend-gradient { flex:1; height:10px; border-radius:999px; background:linear-gradient(90deg,var(--green),var(--gold),var(--orange),var(--red)); }
+      .note { color:var(--muted); line-height:1.5; font-size:13px; }
+      .map-shell { display:grid; gap:14px; }
+      .region-map { position:relative; min-height:560px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background:#f7f5ee; }
+      .region-map svg { width:100%; height:100%; min-height:560px; display:block; }
+      .water { fill:var(--water); opacity:.85; }
+      .context { fill:#ede6da; stroke:#d2c7b7; stroke-width:2; }
+      .arterial { stroke:#d5c9b8; stroke-width:5; stroke-linecap:round; opacity:.68; fill:none; }
+      .arterial.minor { stroke-width:2.5; opacity:.55; }
+      .district { stroke:#172426; stroke-width:2.5; cursor:pointer; transition:opacity 120ms ease, stroke-width 120ms ease; }
+      .district:hover, .district:focus { opacity:.95; stroke-width:4; outline:none; }
+      .district-label { pointer-events:none; fill:#172426; font-size:19px; font-weight:850; text-anchor:middle; }
+      .district-value { pointer-events:none; fill:#172426; font-size:16px; font-weight:750; text-anchor:middle; }
+      .map-note { position:absolute; left:18px; bottom:18px; max-width:330px; color:var(--muted); background:rgba(255,255,255,.9); border:1px solid var(--line); border-radius:8px; padding:12px; font-size:13px; line-height:1.45; }
+      .tooltip { position:absolute; right:18px; top:18px; max-width:286px; background:rgba(255,255,255,.95); border:1px solid var(--line); border-radius:8px; padding:14px; box-shadow:0 14px 40px rgba(23,36,38,.13); line-height:1.45; }
+      .tooltip strong { display:block; font-size:17px; margin-bottom:6px; }
+      .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+      table { width:100%; border-collapse:collapse; font-size:14px; }
+      th,td { padding:10px 8px; border-bottom:1px solid var(--line); text-align:left; }
+      th { color:var(--muted); font-size:12px; text-transform:uppercase; }
+      .bar-row { display:grid; grid-template-columns:142px 1fr 74px; gap:10px; align-items:center; margin:10px 0; font-size:14px; }
+      .bar-track { height:12px; background:#eee9df; border-radius:999px; overflow:hidden; }
+      .bar-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--gold),var(--orange),var(--red)); border-radius:999px; }
+      @media (max-width:980px) { header,main,.bottom-grid { grid-template-columns:1fr; } main{padding:12px;} .region-map,.region-map svg{min-height:460px;} .tooltip{position:static; margin:12px;} .map-note{position:static; margin:12px;} }
     </style>
   </head>
   <body>
     <header>
       <div>
         <h1>Toronto Rent Heatmap Lab</h1>
-        <p class="subtitle">A lightweight schematic rent-pressure map for downtown Toronto. It avoids heavy map tiles so the GitHub Pages app stays fast while still showing the analytical layer.</p>
+        <p class="subtitle">Regional rent-pressure choropleth for downtown Toronto. No zoomable street tiles, no heavy map engine: just fast area-level polygons and dashboard interactions.</p>
       </div>
       <nav aria-label="Project links">
         <a href="https://github.com/XXStvXX/Toronto-Rent-Heatmap-Lab">GitHub</a>
@@ -104,7 +63,6 @@
         <a href="https://github.com/XXStvXX/Toronto-Rent-Heatmap-Lab/tree/main/powerbi">Power BI</a>
       </nav>
     </header>
-
     <main>
       <aside class="panel controls" aria-label="Filters and metrics">
         <label>Year<select id="yearSelect"></select></label>
@@ -116,33 +74,22 @@
           <div class="kpi"><span>Highest area</span><strong id="highestArea">-</strong></div>
           <div class="kpi"><span>Reportable cells</span><strong id="cellCount">-</strong></div>
         </section>
-        <section>
-          <strong>Rent pressure scale</strong>
-          <div class="legend"><span>Lower</span><div class="legend-gradient"></div><span>Higher</span></div>
-        </section>
-        <p class="note">This is a fast schematic map, not a street-level navigation map. The repo still keeps the SQL/Power BI model so a future Power BI version can use full neighbourhood polygons.</p>
+        <section><strong>Rent pressure scale</strong><div class="legend"><span>Lower</span><div class="legend-gradient"></div><span>Higher</span></div></section>
+        <p class="note">This view is intentionally regional. It trades street-level detail for speed and a clearer analytical comparison, closer to a Power BI shape map.</p>
       </aside>
-
       <section class="map-shell">
-        <div class="schematic-wrap" role="application" aria-label="Schematic Toronto rent heatmap">
+        <div class="region-map" role="application" aria-label="Regional Toronto rent heatmap">
           <svg viewBox="0 0 980 620" aria-hidden="true">
             <rect width="980" height="620" fill="#f7f5ee"></rect>
-            <path class="water" d="M0 470 C130 438, 226 500, 360 472 C500 442, 630 462, 760 430 C865 404, 930 392, 980 406 L980 620 L0 620 Z"></path>
-            <path class="land" d="M88 78 L850 60 L908 400 C768 418, 650 468, 522 438 C380 405, 284 454, 164 410 Z"></path>
-            <path class="road" d="M145 398 C255 354, 386 315, 508 280 C624 246, 746 212, 850 170"></path>
-            <path class="road" d="M232 92 L312 420"></path>
-            <path class="road" d="M430 86 L486 438"></path>
-            <path class="road" d="M674 76 L706 420"></path>
-            <path class="road minor" d="M106 180 L862 152"></path>
-            <path class="road minor" d="M122 275 L884 244"></path>
-            <path class="road minor" d="M142 360 L900 324"></path>
-            <text class="label" x="110" y="120">University-Rosedale</text>
-            <text class="label" x="410" y="250">Downtown Core</text>
-            <text class="label" x="610" y="430">Waterfront Communities</text>
-            <text class="label" x="40" y="558">Lake Ontario</text>
-            <g id="nodes"></g>
+            <path class="water" d="M0 482 C150 438 310 506 470 466 C628 426 744 434 980 386 L980 620 L0 620 Z"></path>
+            <path class="context" d="M70 72 L860 60 L920 390 C784 412 668 442 522 414 C374 386 258 438 124 396 Z"></path>
+            <path class="arterial" d="M130 382 C250 332 384 298 512 258 C642 218 746 182 858 132"></path>
+            <path class="arterial minor" d="M112 166 L860 142"></path>
+            <path class="arterial minor" d="M126 282 L892 244"></path>
+            <g id="districts"></g>
           </svg>
-          <div class="tooltip" id="tooltip"><strong>Hover an area</strong><span>Use the filters to explore rent pressure by year and unit type.</span></div>
+          <div class="tooltip" id="tooltip"><strong>Select an area</strong><span>Hover over a region to inspect rent, vacancy, and unit count.</span></div>
+          <div class="map-note">Simplified regional polygons keep rendering light. Full Toronto boundaries can still be added later as TopoJSON without loading street tiles.</div>
         </div>
         <div class="bottom-grid">
           <section class="panel"><h2>Area Ranking</h2><div id="rankingBars"></div></section>
@@ -150,89 +97,36 @@
         </div>
       </section>
     </main>
-
     <script>
-      const rentData = [
-        { year: 2024, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "Studio", rent: 1850, vacancy: 1.8, units: 4200 },
-        { year: 2024, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "1 Bedroom", rent: 2310, vacancy: 1.6, units: 8700 },
-        { year: 2024, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "2 Bedroom", rent: 3120, vacancy: 1.4, units: 6400 },
-        { year: 2024, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "3 Bedroom+", rent: 3850, vacancy: 1.2, units: 1400 },
-        { year: 2024, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "Studio", rent: 1925, vacancy: 1.5, units: 3600 },
-        { year: 2024, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "1 Bedroom", rent: 2425, vacancy: 1.3, units: 9200 },
-        { year: 2024, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "2 Bedroom", rent: 3290, vacancy: 1.1, units: 7100 },
-        { year: 2024, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "3 Bedroom+", rent: 4100, vacancy: null, units: 900 },
-        { year: 2024, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "Studio", rent: 1760, vacancy: 2.2, units: 1900 },
-        { year: 2024, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "1 Bedroom", rent: 2250, vacancy: 1.9, units: 4100 },
-        { year: 2024, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "2 Bedroom", rent: 3010, vacancy: 1.5, units: 3100 },
-        { year: 2024, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "3 Bedroom+", rent: 3925, vacancy: 1.0, units: 700 },
-        { year: 2025, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "Studio", rent: 1910, vacancy: 1.7, units: 4300 },
-        { year: 2025, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "1 Bedroom", rent: 2395, vacancy: 1.5, units: 8900 },
-        { year: 2025, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "2 Bedroom", rent: 3215, vacancy: 1.3, units: 6500 },
-        { year: 2025, id: "DT01", area: "Downtown Core", group: "Downtown Toronto", x: 505, y: 295, unit: "3 Bedroom+", rent: 3990, vacancy: 1.1, units: 1500 },
-        { year: 2025, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "Studio", rent: 1985, vacancy: 1.4, units: 3700 },
-        { year: 2025, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "1 Bedroom", rent: 2510, vacancy: 1.2, units: 9400 },
-        { year: 2025, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "2 Bedroom", rent: 3375, vacancy: 1.0, units: 7300 },
-        { year: 2025, id: "DT02", area: "Waterfront Communities", group: "Downtown Toronto", x: 685, y: 410, unit: "3 Bedroom+", rent: null, vacancy: null, units: 920 },
-        { year: 2025, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "Studio", rent: 1815, vacancy: 2.0, units: 1950 },
-        { year: 2025, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "1 Bedroom", rent: 2325, vacancy: 1.8, units: 4200 },
-        { year: 2025, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "2 Bedroom", rent: 3095, vacancy: 1.4, units: 3200 },
-        { year: 2025, id: "DT03", area: "University-Rosedale", group: "Downtown Toronto", x: 255, y: 210, unit: "3 Bedroom+", rent: 4050, vacancy: 0.9, units: 720 }
+      const rentData=[
+        {year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"Studio",rent:1850,vacancy:1.8,units:4200},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"1 Bedroom",rent:2310,vacancy:1.6,units:8700},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"2 Bedroom",rent:3120,vacancy:1.4,units:6400},{year:2024,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3850,vacancy:1.2,units:1400},
+        {year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"Studio",rent:1925,vacancy:1.5,units:3600},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"1 Bedroom",rent:2425,vacancy:1.3,units:9200},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"2 Bedroom",rent:3290,vacancy:1.1,units:7100},{year:2024,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"3 Bedroom+",rent:4100,vacancy:null,units:900},
+        {year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"Studio",rent:1760,vacancy:2.2,units:1900},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"1 Bedroom",rent:2250,vacancy:1.9,units:4100},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"2 Bedroom",rent:3010,vacancy:1.5,units:3100},{year:2024,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3925,vacancy:1.0,units:700},
+        {year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"Studio",rent:1910,vacancy:1.7,units:4300},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"1 Bedroom",rent:2395,vacancy:1.5,units:8900},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"2 Bedroom",rent:3215,vacancy:1.3,units:6500},{year:2025,id:"DT01",area:"Downtown Core",group:"Downtown Toronto",unit:"3 Bedroom+",rent:3990,vacancy:1.1,units:1500},
+        {year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"Studio",rent:1985,vacancy:1.4,units:3700},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"1 Bedroom",rent:2510,vacancy:1.2,units:9400},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"2 Bedroom",rent:3375,vacancy:1.0,units:7300},{year:2025,id:"DT02",area:"Waterfront Communities",group:"Downtown Toronto",unit:"3 Bedroom+",rent:null,vacancy:null,units:920},
+        {year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"Studio",rent:1815,vacancy:2.0,units:1950},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"1 Bedroom",rent:2325,vacancy:1.8,units:4200},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"2 Bedroom",rent:3095,vacancy:1.4,units:3200},{year:2025,id:"DT03",area:"University-Rosedale",group:"Downtown Toronto",unit:"3 Bedroom+",rent:4050,vacancy:.9,units:720}
       ];
-      const yearSelect = document.querySelector("#yearSelect");
-      const unitSelect = document.querySelector("#unitSelect");
-      const groupSelect = document.querySelector("#groupSelect");
-      const nodes = document.querySelector("#nodes");
-      const tooltip = document.querySelector("#tooltip");
-      const formatMoney = v => v == null || Number.isNaN(v) ? "N/A" : `$${Math.round(v).toLocaleString()}`;
-      const formatPercent = v => v == null || Number.isNaN(v) ? "N/A" : `${v.toFixed(1)}%`;
-      yearSelect.innerHTML = [...new Set(rentData.map(d => d.year))].sort((a, b) => b - a).map(y => `<option>${y}</option>`).join("");
-      unitSelect.innerHTML = ["Studio", "1 Bedroom", "2 Bedroom", "3 Bedroom+"].map(u => `<option>${u}</option>`).join("");
-      unitSelect.value = "1 Bedroom";
-      groupSelect.innerHTML = ["All", ...new Set(rentData.map(d => d.group))].map(g => `<option>${g}</option>`).join("");
-      function rows() {
-        return rentData.filter(d => d.year === Number(yearSelect.value) && d.unit === unitSelect.value && (groupSelect.value === "All" || d.group === groupSelect.value));
-      }
-      function colorFor(value, min, max) {
-        if (value == null) return "#8c8c8c";
-        const t = max === min ? 0.5 : (value - min) / (max - min);
-        if (t < 0.34) return "#5f8f73";
-        if (t < 0.67) return "#d6a642";
-        return "#b64a3f";
-      }
-      function showTip(d) {
-        tooltip.innerHTML = `<strong>${d.area}</strong>${d.year} · ${d.unit}<br>Average rent: <b>${formatMoney(d.rent)}</b><br>Vacancy: ${formatPercent(d.vacancy)}<br>Units: ${d.units.toLocaleString()}`;
-      }
-      function update() {
-        const selected = rows();
-        const reportable = selected.filter(d => d.rent != null);
-        const rents = reportable.map(d => d.rent);
-        const min = Math.min(...rents), max = Math.max(...rents);
-        const avg = rents.reduce((a, b) => a + b, 0) / Math.max(rents.length, 1);
-        const vacancies = reportable.map(d => d.vacancy).filter(v => v != null);
-        const avgVacancy = vacancies.reduce((a, b) => a + b, 0) / Math.max(vacancies.length, 1);
-        const ranked = reportable.slice().sort((a, b) => b.rent - a.rent);
-        document.querySelector("#avgRent").textContent = formatMoney(avg);
-        document.querySelector("#avgVacancy").textContent = vacancies.length ? formatPercent(avgVacancy) : "N/A";
-        document.querySelector("#highestArea").textContent = ranked[0] ? ranked[0].area : "N/A";
-        document.querySelector("#cellCount").textContent = String(reportable.length);
-        nodes.innerHTML = selected.map(d => {
-          const radius = d.rent == null ? 34 : Math.max(38, Math.min(58, 26 + d.units / 330));
-          return `<g class="area-node" tabindex="0" data-id="${d.id}"><circle cx="${d.x}" cy="${d.y}" r="${radius}" fill="${colorFor(d.rent, min, max)}" opacity="${d.rent == null ? 0.45 : 0.82}"></circle><text x="${d.x}" y="${d.y + 5}" text-anchor="middle" fill="#172426" font-size="15" font-weight="800">${formatMoney(d.rent)}</text></g>`;
-        }).join("");
-        [...nodes.querySelectorAll(".area-node")].forEach(node => {
-          const datum = selected.find(d => d.id === node.dataset.id);
-          node.addEventListener("mouseenter", () => showTip(datum));
-          node.addEventListener("focus", () => showTip(datum));
-        });
-        const top = Math.max(...ranked.map(d => d.rent));
-        document.querySelector("#rankingBars").innerHTML = ranked.map(d => `<div class="bar-row"><span>${d.area}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.rent / top) * 100}%"></div></div><strong>${formatMoney(d.rent)}</strong></div>`).join("");
-        document.querySelector("#dataRows").innerHTML = selected.map(d => `<tr><td>${d.area}</td><td>${formatMoney(d.rent)}</td><td>${formatPercent(d.vacancy)}</td><td>${d.units.toLocaleString()}</td></tr>`).join("");
-        if (ranked[0]) showTip(ranked[0]);
-      }
-      yearSelect.addEventListener("change", update);
-      unitSelect.addEventListener("change", update);
-      groupSelect.addEventListener("change", update);
-      update();
+      const polygons={
+        DT03:{path:"M110 92 L382 86 L438 260 L314 390 L130 356 Z",label:[248,216],name:"University-Rosedale"},
+        DT01:{path:"M382 86 L652 78 L676 334 L438 416 L314 390 L438 260 Z",label:[500,250],name:"Downtown Core"},
+        DT02:{path:"M438 416 L676 334 L902 372 C792 414 650 462 522 438 Z",label:[660,402],name:"Waterfront Communities"}
+      };
+      const yearSelect=document.querySelector("#yearSelect"),unitSelect=document.querySelector("#unitSelect"),groupSelect=document.querySelector("#groupSelect"),districts=document.querySelector("#districts"),tooltip=document.querySelector("#tooltip");
+      const formatMoney=v=>v==null||Number.isNaN(v)?"N/A":`$${Math.round(v).toLocaleString()}`;
+      const formatPercent=v=>v==null||Number.isNaN(v)?"N/A":`${v.toFixed(1)}%`;
+      yearSelect.innerHTML=[...new Set(rentData.map(d=>d.year))].sort((a,b)=>b-a).map(y=>`<option>${y}</option>`).join("");
+      unitSelect.innerHTML=["Studio","1 Bedroom","2 Bedroom","3 Bedroom+"].map(u=>`<option>${u}</option>`).join(""); unitSelect.value="1 Bedroom";
+      groupSelect.innerHTML=["All",...new Set(rentData.map(d=>d.group))].map(g=>`<option>${g}</option>`).join("");
+      function rows(){return rentData.filter(d=>d.year===Number(yearSelect.value)&&d.unit===unitSelect.value&&(groupSelect.value==="All"||d.group===groupSelect.value));}
+      function colorFor(value,min,max){if(value==null)return"#8c8c8c";const t=max===min?.5:(value-min)/(max-min);if(t<.34)return"#5f8f73";if(t<.67)return"#d6a642";return"#b64a3f";}
+      function showTip(d){tooltip.innerHTML=`<strong>${d.area}</strong>${d.year} · ${d.unit}<br>Average rent: <b>${formatMoney(d.rent)}</b><br>Vacancy: ${formatPercent(d.vacancy)}<br>Units: ${d.units.toLocaleString()}`;}
+      function update(){const selected=rows(),reportable=selected.filter(d=>d.rent!=null),rents=reportable.map(d=>d.rent),min=Math.min(...rents),max=Math.max(...rents),avg=rents.reduce((a,b)=>a+b,0)/Math.max(rents.length,1),vacancies=reportable.map(d=>d.vacancy).filter(v=>v!=null),avgVacancy=vacancies.reduce((a,b)=>a+b,0)/Math.max(vacancies.length,1),ranked=reportable.slice().sort((a,b)=>b.rent-a.rent);
+        document.querySelector("#avgRent").textContent=formatMoney(avg);document.querySelector("#avgVacancy").textContent=vacancies.length?formatPercent(avgVacancy):"N/A";document.querySelector("#highestArea").textContent=ranked[0]?ranked[0].area:"N/A";document.querySelector("#cellCount").textContent=String(reportable.length);
+        districts.innerHTML=selected.map(d=>{const p=polygons[d.id],fill=colorFor(d.rent,min,max);return `<g class="district-group" data-id="${d.id}" tabindex="0"><path class="district" d="${p.path}" fill="${fill}" opacity="${d.rent==null?.42:.82}"></path><text class="district-label" x="${p.label[0]}" y="${p.label[1]}">${p.name}</text><text class="district-value" x="${p.label[0]}" y="${p.label[1]+25}">${formatMoney(d.rent)}</text></g>`;}).join("");
+        [...districts.querySelectorAll(".district-group")].forEach(node=>{const datum=selected.find(d=>d.id===node.dataset.id);node.addEventListener("mouseenter",()=>showTip(datum));node.addEventListener("focus",()=>showTip(datum));});
+        const top=Math.max(...ranked.map(d=>d.rent));document.querySelector("#rankingBars").innerHTML=ranked.map(d=>`<div class="bar-row"><span>${d.area}</span><div class="bar-track"><div class="bar-fill" style="width:${(d.rent/top)*100}%"></div></div><strong>${formatMoney(d.rent)}</strong></div>`).join("");
+        document.querySelector("#dataRows").innerHTML=selected.map(d=>`<tr><td>${d.area}</td><td>${formatMoney(d.rent)}</td><td>${formatPercent(d.vacancy)}</td><td>${d.units.toLocaleString()}</td></tr>`).join(""); if(ranked[0])showTip(ranked[0]);}
+      yearSelect.addEventListener("change",update);unitSelect.addEventListener("change",update);groupSelect.addEventListener("change",update);update();
     </script>
   </body>
 </html>
