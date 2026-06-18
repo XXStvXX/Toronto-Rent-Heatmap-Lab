@@ -23,6 +23,12 @@ The live demo uses a locked regional choropleth instead of a zoomable street map
 - Build Power BI-ready outputs for choropleth maps, tooltips, KPI cards, and time-series analysis.
 - Keep the data pipeline reproducible enough to update when new CMHC rental tables are released.
 
+## AI-Assisted Workflow
+
+This project uses AI-assisted prototyping and documentation as part of a human-in-the-loop workflow. AI helps with project structure, implementation ideas, debugging prompts, and clearer explanations, while source assumptions, data limitations, and final technical claims are reviewed manually.
+
+See [`docs/AI_ASSISTED_WORKFLOW.md`](docs/AI_ASSISTED_WORKFLOW.md) for the workflow note.
+
 ## MVP Scope
 
 The first release focuses on Toronto zones and neighbourhood-like geographies where public data is dense enough to map responsibly.
